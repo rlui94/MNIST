@@ -33,10 +33,10 @@ if __name__ == '__main__':
     mndata = MNIST('./images/')
     train_images, train_labels = mndata.load_training()
     #test_images, test_labels = mndata.load_testing()
-    np_train = np.asarray(train_images, dtype=np.float32).reshape(60000, 784) / 255  # divide to avoid huge weights
-    bias = np.ones((60000, 784), dtype=np.float32)
+    np_train = np.asarray(train_images, dtype=np.float16).reshape(60000, 784) / 255  # divide to avoid huge weights
+    bias = np.ones((60000, 1), dtype=np.float16)
     np_train = np.dstack((np_train, bias))  # concatenate matrix of 1s for bias
-    weights = np.full((29,), ETA)  # CHANGE THIS LATER
+    weights = np.full((785,), ETA)  # CHANGE THIS LATER
     train_on_set(train_images, train_labels, weights, 5, ETA, 5)
 
 
