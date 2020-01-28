@@ -10,23 +10,41 @@ import numpy as np
 
 ETA = 0.1
 LOGFILE = 'log.txt'
+CLASSES = 10
 
 
 def train_on_set(train_images, train_labels, weights, size, learning_rate, epochs):
     with open(LOGFILE, 'a') as file:
+        file.write("%s: Beginning training.\n" % (datetime.datetime.now()))
+        file.write("%s: Current accuracy is %d.\n" % (datetime.datetime.now(), check_accuracy(train_images, train_labels, weights, size)))
         for e in range(0, epochs):
-            file.write("%s: Beginning epoch %d.\n Weights currently " % (datetime.datetime.now(), e+1))
-            file.write(weights)
-            file.write('\n')
-            curr_img = 0
-            correct = 0
-            for i in range(0, size):
-                activations = np.dot(train_images[i], weights)
-                thresholds = np.where(activations > 0, 1, 0)
+            file.write("%s: Beginning epoch %d.\n" % (datetime.datetime.now(), e+1))
+            perceptrons = np.zeros(10)
+            for n in range(0, size):
+                for i in range(0, CLASSES):
+                    perceptrons[i] = np.dot(train_images[n], weights[i])
+                thresholds = np.where(perceptrons > 0, 1, 0)
+                prediction = np.argmax(thresholds)
+                if prediction != train_labels[n]:
+                    for i in range(0, CLASSES):
+                        for j in enumerate(weights[i]):
+                            weights[i][j] -= learning_rate * (prediction - train_labels[n]) * train_images[n][j]
+            file.write("%s: Epoch %d complete.\n" % (datetime.datetime.now(), e+1))
+            file.write("%s: Accuracy for epoch %d is %d.\n" % (
+            datetime.datetime.now(), e+1, check_accuracy(train_images, train_labels, weights, size)))
 
-                curr_img += 1
-            file.write("%s: Epoch %d complete. Current accuracy is %d.\n" % (datetime.datetime.now(), e+1, correct/curr_img))
 
+def check_accuracy(train_images, train_labels, weights, size):
+    perceptrons = np.zeros(10)
+    correct = 0
+    for n in range(0, size):
+        for i in range(0, CLASSES):
+            perceptrons[i] = np.dot(train_images[n], weights[i])
+        thresholds = np.where(perceptrons > 0, 1, 0)
+        prediction = np.argmax(thresholds)
+        if prediction == train_labels[n]:
+            correct += 1
+    return correct/size
 
 
 if __name__ == '__main__':
