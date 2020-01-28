@@ -8,6 +8,8 @@ import struct
 import random
 import numpy as np
 
+ETA = 0.1
+
 if __name__ == '__main__':
     filename = {
         'train_images': './images/train-images-idx3-ubyte',
@@ -17,7 +19,11 @@ if __name__ == '__main__':
     }
 
     mndata = MNIST('./images/')
-    images, labels = mndata.load_training()
-    print(mndata.display(images[5]))
-    print(labels[5])
+    train_images, train_labels = mndata.load_training()
+    #test_images, test_labels = mndata.load_testing()
+    np_train = np.asarray(train_images, dtype=np.float32).reshape(60000, 28, 28) / 255
+    bias = np.ones((60000, 28), dtype=np.float32)
+    weights = np.full((29,), ETA)
+
+
 
