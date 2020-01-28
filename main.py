@@ -8,8 +8,8 @@ import random
 import datetime
 import numpy as np
 
-ETA = 0.001
-LOGFILE = 'eta001.txt'
+ETA = 0.01
+LOGFILE = 'eta01.txt'
 CLASSES = 10
 
 
@@ -18,16 +18,20 @@ def train_on_set(train_images, train_labels, test_images, test_labels, weights, 
         file.write("%s: Beginning training.\n" % (datetime.datetime.now()))
         print("%s: Beginning training.\n" % (datetime.datetime.now()))
         prev_acc = check_accuracy(train_images, train_labels, weights, size)
-        file.write("%s: Current accuracy is %.5f.\n" % (datetime.datetime.now(), prev_acc))
+        file.write("%s: Current accuracy is %.5f/%.5f.\n" % (datetime.datetime.now(), prev_acc, check_accuracy(test_images, test_labels, weights, 10000)))
         print("%s: Current accuracy is %.5f.\n" % (datetime.datetime.now(), prev_acc))
         for e in range(0, epochs):
             #file.write("%s: Beginning epoch %d.\n" % (datetime.datetime.now(), e+1))
             print("%s: Beginning epoch %d.\n" % (datetime.datetime.now(), e + 1))
             for n in range(0, size):
                 if n%50==0:
+                    acc =check_accuracy(train_images, train_labels, weights, size)
+                    test_acc = check_accuracy(test_images, test_labels, weights, 10000)
                     #file.write("%s: The accuracy for %dth input is %d.\n" % (datetime.datetime.now(), n, check_accuracy(train_images, train_labels, weights, size)))
-                    print("%s: The accuracy for %dth input is %.5f.\n" % (
-                    datetime.datetime.now(), n, check_accuracy(train_images, train_labels, weights, size)))
+                    print("%s: The accuracy for %dth input is %.5f/%.5f.\n" % (
+                    datetime.datetime.now(), n, acc, test_acc))
+                    if acc > 0.86:
+                        break
                 perceptrons = np.zeros(10)
                 for i in range(0, CLASSES):
                     perceptrons[i] = np.dot(train_images[n], weights[i])
@@ -61,6 +65,19 @@ def check_accuracy(images, labels, weights, size):
             correct += 1
     return correct/size
 
+def make_conf_matrix(images, labels, weights, size):
+    perceptrons = np.zeros(10)
+    matrix = np.zeros(2, 10)
+    for n in range(0, size):
+        for i in range(0, CLASSES):
+            perceptrons[i] = np.dot(images[n], weights[i])
+        prediction = np.argmax(perceptrons)
+        if prediction == labels[n]:
+            matrix[0, prediction] += 1
+        else:
+            matrix[1, prediction] += 1
+    return print(matrix)
+
 
 if __name__ == '__main__':
     mndata = MNIST('./images/')
@@ -74,7 +91,7 @@ if __name__ == '__main__':
     np_test = np.concatenate((np_test, bias), axis=1)
     weights = np.random.rand(10, 785) - .5
     train_on_set(np_train, train_labels, np_test, test_labels, weights, 60000, ETA, 70)
-
+    make_conf_matrix(np_test, test_labels, weights, 10000)
 
 
 
