@@ -106,4 +106,4 @@ venv.bak/
 
 /images/*
 /log.txt
-./eta*
+/eta*.txt
