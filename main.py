@@ -14,25 +14,25 @@ LOGFILE = 'eta01.txt'
 CLASSES = 10
 
 
-def train_on_set(train_data, test_data, weights, size, learning_rate, epochs):
+def train_on_set(train_data, test_data, weights, learning_rate, epochs):
     with open(LOGFILE, 'a') as file:
         file.write("%s: Beginning training.\n" % (datetime.datetime.now()))
         print("%s: Beginning training.\n" % (datetime.datetime.now()))
-        prev_acc = check_accuracy(train_data.images, train_data.labels, weights, size)
+        prev_acc = check_accuracy(train_data.images, train_data.labels, weights, train_data.size)
         file.write("%s: Current accuracy is %.5f/%.5f.\n" % (datetime.datetime.now(), prev_acc, check_accuracy(test_data.images, test_data.labels, weights, 10000)))
         print("%s: Current accuracy is %.5f.\n" % (datetime.datetime.now(), prev_acc))
         for e in range(0, epochs):
             # file.write("%s: Beginning epoch %d.\n" % (datetime.datetime.now(), e+1))
             print("%s: Beginning epoch %d.\n" % (datetime.datetime.now(), e + 1))
-            for n in range(0, size):
+            for n in range(0, train_data.size):
                 if n % 50 == 0:
-                    acc = check_accuracy(train_data.images, train_data.labels, weights, size)
-                    test_acc = check_accuracy(test_data.images, test_data.labels, weights, 10000)
+                    acc = check_accuracy(train_data.images, train_data.labels, weights, train_data.size)
+                    test_acc = check_accuracy(test_data.images, test_data.labels, weights, test_data.size)
                     # file.write("%s: The accuracy for %dth input is %d.\n" % (datetime.datetime.now(), n, check_accuracy(train_data.images, train_data.labels, weights, size)))
                     print("%s: The accuracy for %dth input is %.5f/%.5f.\n" % (
                     datetime.datetime.now(), n, acc, test_acc))
                     if acc > 0.85:
-                        make_conf_matrix(test_data.images, test_data.labels, weights, 10000)
+                        make_conf_matrix(test_data.images, test_data.labels, weights, test_data.size)
                 perceptrons = np.zeros(10)
                 for i in range(0, CLASSES):
                     perceptrons[i] = np.dot(train_data.images[n], weights[i])
@@ -46,8 +46,8 @@ def train_on_set(train_data, test_data, weights, size, learning_rate, epochs):
                             else:
                                 weights[i, j] -= learning_rate * (threshold[i] - 0) * train_data.images[n, j]
             # file.write("%s: Epoch %d complete.\n" % (datetime.datetime.now(), e+1))
-            accuracy = check_accuracy(train_data.images, train_data.labels, weights, size)
-            test_acc = check_accuracy(test_data.images, test_data.labels, weights, 10000)
+            accuracy = check_accuracy(train_data.images, train_data.labels, weights, train_data.size)
+            test_acc = check_accuracy(test_data.images, test_data.labels, weights, test_data.size)
             file.write("%s:%d, %.5f, %.5f.\n" % (datetime.datetime.now(), e+1, accuracy, test_acc))
             print("%s: Epoch %d complete.\n" % (datetime.datetime.now(), e + 1))
             print("%s: Accuracy for epoch %d is %.5f.\n" % (datetime.datetime.now(), e + 1, accuracy))
