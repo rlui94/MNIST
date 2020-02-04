@@ -4,6 +4,7 @@ Code for extracting MNIST images based on https://medium.com/@mannasiladittya/co
 """
 
 import data
+import perceptron
 from mnist.loader import MNIST
 import random
 import datetime
@@ -14,40 +15,40 @@ LOGFILE = 'eta01.txt'
 CLASSES = 10
 
 
-def train_on_set(train_data, test_data, weights, learning_rate, epochs):
+def train_on_set(train_data, test_data, perceptrons, learning_rate, epochs):
     with open(LOGFILE, 'a') as file:
         file.write("%s: Beginning training.\n" % (datetime.datetime.now()))
         print("%s: Beginning training.\n" % (datetime.datetime.now()))
-        prev_acc = check_accuracy(train_data, weights)
-        file.write("%s: Current accuracy is %.5f/%.5f.\n" % (datetime.datetime.now(), prev_acc, check_accuracy(test_data.images, test_data.labels, weights, 10000)))
+        prev_acc = check_accuracy(train_data, perceptrons)
+        file.write("%s: Current accuracy is %.5f/%.5f.\n" % (datetime.datetime.now(), prev_acc, check_accuracy(test_data, perceptrons)))
         print("%s: Current accuracy is %.5f.\n" % (datetime.datetime.now(), prev_acc))
         for e in range(0, epochs):
             # file.write("%s: Beginning epoch %d.\n" % (datetime.datetime.now(), e+1))
             print("%s: Beginning epoch %d.\n" % (datetime.datetime.now(), e + 1))
             for n in range(0, train_data.size):
                 if n % 50 == 0:
-                    acc = check_accuracy(train_data, weights)
-                    test_acc = check_accuracy(test_data, weights)
-                    # file.write("%s: The accuracy for %dth input is %d.\n" % (datetime.datetime.now(), n, check_accuracy(train_data.images, train_data.labels, weights, size)))
+                    acc = check_accuracy(train_data, perceptrons)
+                    test_acc = check_accuracy(test_data, perceptrons)
+                    # file.write("%s: The accuracy for %dth input is %d.\n" % (datetime.datetime.now(), n, check_accuracy(train_data, perceptrons)))
                     print("%s: The accuracy for %dth input is %.5f/%.5f.\n" % (
                     datetime.datetime.now(), n, acc, test_acc))
                     if acc > 0.85:
-                        make_conf_matrix(test_data, weights)
-                perceptrons = np.zeros(10)
+                        make_conf_matrix(test_data, perceptrons)
+                predictions = np.zeros(CLASSES)
                 for i in range(0, CLASSES):
-                    perceptrons[i] = np.dot(train_data.images[n], weights[i])
-                prediction = np.argmax(perceptrons)
-                threshold = np.where(perceptrons > 0, 1, 0)
+                    predictions[i] = perceptrons[i].predict(train_data.images[n])
+                prediction = np.argmax(predictions)
+                threshold = np.where(predictions > 0, 1, 0)
                 if prediction != train_data.labels[n]:
                     for i in range(0, CLASSES):
-                        for j in range(0, len(weights[i])):
+                        for j in range(0, len(perceptrons[i].weights)):
                             if i == train_data.labels[n]:
-                                weights[i, j] -= learning_rate * (threshold[i] - 1) * train_data.images[n, j]
+                                perceptrons[i].weights[j] -= learning_rate * (threshold[i] - 1) * train_data.images[n, j]
                             else:
-                                weights[i, j] -= learning_rate * (threshold[i] - 0) * train_data.images[n, j]
+                                perceptrons[i].weights[j] -= learning_rate * (threshold[i] - 0) * train_data.images[n, j]
             # file.write("%s: Epoch %d complete.\n" % (datetime.datetime.now(), e+1))
-            accuracy = check_accuracy(train_data, weights)
-            test_acc = check_accuracy(test_data, weights)
+            accuracy = check_accuracy(train_data, perceptrons)
+            test_acc = check_accuracy(test_data, perceptrons)
             file.write("%s:%d, %.5f, %.5f.\n" % (datetime.datetime.now(), e+1, accuracy, test_acc))
             print("%s: Epoch %d complete.\n" % (datetime.datetime.now(), e + 1))
             print("%s: Accuracy for epoch %d is %.5f.\n" % (datetime.datetime.now(), e + 1, accuracy))
@@ -55,24 +56,25 @@ def train_on_set(train_data, test_data, weights, learning_rate, epochs):
                 break
 
 
-def check_accuracy(data, weights):
-    perceptrons = np.zeros(10)
+def check_accuracy(data, perceptrons):
+    predictions = np.zeros(CLASSES)
     correct = 0
     for n in range(0, data.size):
         for i in range(0, CLASSES):
-            perceptrons[i] = np.dot(data.images[n], weights[i])
-        prediction = np.argmax(perceptrons)
+            predictions[i] = perceptrons[i].predict(data.images[n])
+        prediction = np.argmax(predictions)
         if prediction == data.labels[n]:
             correct += 1
     return correct/data.size
 
-def make_conf_matrix(data, size):
-    perceptrons = np.zeros(10)
-    matrix = np.zeros((10, 10))
-    for n in range(0, size):
+
+def make_conf_matrix(data, perceptrons):
+    predictions = np.zeros(CLASSES)
+    matrix = np.zeros((CLASSES, CLASSES))
+    for n in range(0, data.size):
         for i in range(0, CLASSES):
-            perceptrons[i] = np.dot(data.images[n], weights[i])
-        prediction = np.argmax(perceptrons)
+            predictions[i] = perceptrons[i].predict(data.images[n])
+        prediction = np.argmax(predictions)
         matrix[prediction, data.labels[n]] += 1
     return print(matrix)
 
@@ -85,9 +87,10 @@ if __name__ == '__main__':
     train_data.load(60000, train_images, train_labels)
     test_data = data.Data()
     test_data.load(10000, test_images, test_labels)
-    weights = np.random.rand(10, 785) - .5
-    train_on_set(train_data, test_data, weights, 60000, ETA, 70)
-    make_conf_matrix(test_data.images, test_labels, weights, 10000)
+    perceps = [perceptron.Perceptron(784) for i in range(CLASSES)]
+    # weights = np.random.rand(10, 785) - .5
+    train_on_set(train_data, test_data, perceps, ETA, 70)
+    make_conf_matrix(test_data, perceps)
 
 
 
