@@ -18,7 +18,7 @@ def train_on_set(train_data, test_data, weights, learning_rate, epochs):
     with open(LOGFILE, 'a') as file:
         file.write("%s: Beginning training.\n" % (datetime.datetime.now()))
         print("%s: Beginning training.\n" % (datetime.datetime.now()))
-        prev_acc = check_accuracy(train_data.images, train_data.labels, weights, train_data.size)
+        prev_acc = check_accuracy(train_data, weights)
         file.write("%s: Current accuracy is %.5f/%.5f.\n" % (datetime.datetime.now(), prev_acc, check_accuracy(test_data.images, test_data.labels, weights, 10000)))
         print("%s: Current accuracy is %.5f.\n" % (datetime.datetime.now(), prev_acc))
         for e in range(0, epochs):
@@ -26,13 +26,13 @@ def train_on_set(train_data, test_data, weights, learning_rate, epochs):
             print("%s: Beginning epoch %d.\n" % (datetime.datetime.now(), e + 1))
             for n in range(0, train_data.size):
                 if n % 50 == 0:
-                    acc = check_accuracy(train_data.images, train_data.labels, weights, train_data.size)
-                    test_acc = check_accuracy(test_data.images, test_data.labels, weights, test_data.size)
+                    acc = check_accuracy(train_data, weights)
+                    test_acc = check_accuracy(test_data, weights)
                     # file.write("%s: The accuracy for %dth input is %d.\n" % (datetime.datetime.now(), n, check_accuracy(train_data.images, train_data.labels, weights, size)))
                     print("%s: The accuracy for %dth input is %.5f/%.5f.\n" % (
                     datetime.datetime.now(), n, acc, test_acc))
                     if acc > 0.85:
-                        make_conf_matrix(test_data.images, test_data.labels, weights, test_data.size)
+                        make_conf_matrix(test_data, weights)
                 perceptrons = np.zeros(10)
                 for i in range(0, CLASSES):
                     perceptrons[i] = np.dot(train_data.images[n], weights[i])
@@ -46,8 +46,8 @@ def train_on_set(train_data, test_data, weights, learning_rate, epochs):
                             else:
                                 weights[i, j] -= learning_rate * (threshold[i] - 0) * train_data.images[n, j]
             # file.write("%s: Epoch %d complete.\n" % (datetime.datetime.now(), e+1))
-            accuracy = check_accuracy(train_data.images, train_data.labels, weights, train_data.size)
-            test_acc = check_accuracy(test_data.images, test_data.labels, weights, test_data.size)
+            accuracy = check_accuracy(train_data, weights)
+            test_acc = check_accuracy(test_data, weights)
             file.write("%s:%d, %.5f, %.5f.\n" % (datetime.datetime.now(), e+1, accuracy, test_acc))
             print("%s: Epoch %d complete.\n" % (datetime.datetime.now(), e + 1))
             print("%s: Accuracy for epoch %d is %.5f.\n" % (datetime.datetime.now(), e + 1, accuracy))
@@ -55,25 +55,25 @@ def train_on_set(train_data, test_data, weights, learning_rate, epochs):
                 break
 
 
-def check_accuracy(images, labels, weights, size):
+def check_accuracy(data, weights):
     perceptrons = np.zeros(10)
     correct = 0
-    for n in range(0, size):
+    for n in range(0, data.size):
         for i in range(0, CLASSES):
-            perceptrons[i] = np.dot(images[n], weights[i])
+            perceptrons[i] = np.dot(data.images[n], weights[i])
         prediction = np.argmax(perceptrons)
-        if prediction == labels[n]:
+        if prediction == data.labels[n]:
             correct += 1
-    return correct/size
+    return correct/data.size
 
-def make_conf_matrix(images, labels, weights, size):
+def make_conf_matrix(data, size):
     perceptrons = np.zeros(10)
     matrix = np.zeros((10, 10))
     for n in range(0, size):
         for i in range(0, CLASSES):
-            perceptrons[i] = np.dot(images[n], weights[i])
+            perceptrons[i] = np.dot(data.images[n], weights[i])
         prediction = np.argmax(perceptrons)
-        matrix[prediction, labels[n]] += 1
+        matrix[prediction, data.labels[n]] += 1
     return print(matrix)
 
 
