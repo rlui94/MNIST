@@ -6,10 +6,10 @@ from mnist.loader import MNIST
 import numpy as np
 
 
-class Data(object):
+class Data:
     def __init__(self):
-        self.images = np.zeroes(0)
-        self.labels = np.zeroes(0)
+        self.images = np.zeros(0)
+        self.labels = np.zeros(0)
         self.size = 0
 
     def load(self, size, images, labels):
